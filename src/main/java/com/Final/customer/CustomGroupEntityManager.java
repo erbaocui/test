@@ -11,6 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,7 +38,12 @@ public class CustomGroupEntityManager extends GroupEntityManager {
         if (loginName == null)
             return null;
 
-        List<MyRole> bGroupList = myRoleService.queryMyRoleListByLoginName(loginName);
+       List<MyRole> bGroupList = myRoleService.queryMyRoleListByLoginName(loginName);
+  /*      List<MyRole> bGroupList =new ArrayList<MyRole>();
+         MyRole yRole=new MyRole();
+        yRole.setId("bz");
+        yRole.setName("班长");
+        bGroupList.add(yRole);*/
 
         List<Group> gs = new java.util.ArrayList<Group>();
         String activitRole;

@@ -57,7 +57,7 @@
 		if(row.state=='未提交'){
 			return "<a  href='javascript:startApply("+row.id+")'>提交申请</a>";			
 		}else if(row.state=='审核通过'||row.state=='审核未通过'){
-			return "<a  href='javascript:openListCommentDialog("+row.processInstanceId+")'>查看历史批注</a>";
+			return "<a  href='javascript:openListCommentDialog(\""+row.processInstanceId+"\")'>查看历史批注</a>";
 		}
 	}
 	

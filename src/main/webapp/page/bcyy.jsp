@@ -16,7 +16,7 @@
 	
 	function submit(state){
 		 $("#fm").form("submit",{
-			url:"${pageContext.request.contextPath}/task/audit_bz.do?state="+state,
+			url:"${pageContext.request.contextPath}/task/bcyy.do?state="+state,
 			onSubmit:function(){
 				return $(this).form("validate");
 			},
@@ -53,7 +53,7 @@
 <body style="margin: 5px">
 <div id="p" class="easyui-panel" title="班长审批" style="width: 700px;height: 280px;padding: 10px">
    <form id="fm" method="post">
-
+	   <input type="text" id="group" name="group" value="${group}"/>
  	<table cellspacing="8px">
    		<tr>
    			<td>请假人：</td>
@@ -63,13 +63,13 @@
    			<td>&nbsp;</td>
    			<td>请假天数：</td>
    			<td>
-   				<input type="text" id="leaveDays" name="leaveDays" readonly="readonly"/>
+   				<input type="text" id="leaveDays" name="leaveDays" />
    			</td>
    		</tr>
    		<tr>
    			<td valign="top">请假原因：</td>
    			<td colspan="4">
-   				<textarea id="leaveReason" name="leaveReason" rows="2" cols="49" readonly="readonly"></textarea>
+   				<textarea id="leaveReason" name="leaveReason" rows="2" cols="49" ></textarea>
    			</td>
    		</tr>
    		<tr>
@@ -80,7 +80,6 @@
    		</tr>
    		<tr>
    		    <td>
-				<input type="hidden" id="group" name="group" value="${param.group}"/>
    		    	<input type="hidden" name="taskId" value="${param.taskId }"/>
    		    </td>
    			<td colspan="4">

@@ -8,14 +8,14 @@ import java.util.Date;
 public class Leave {
 
     private Integer id; // 编号
-    private User user; // 请假人
+    private MyUser user; // 请假人
     private Date leaveDate; // 请假日期
     private Integer leaveDays; // 请假天数
     private String leaveReason; // 请假原因
     private String state; // 审核状态  未提交  审核中 审核通过 审核未通过
     private String processInstanceId; // 流程实例id
 
-    public Leave(Integer id, User user, Date leaveDate, Integer leaveDays, String leaveReason, String state, String processInstanceId) {
+    public Leave(Integer id, MyUser user, Date leaveDate, Integer leaveDays, String leaveReason, String state, String processInstanceId) {
         this.id = id;
         this.user = user;
         this.leaveDate = leaveDate;
@@ -36,11 +36,11 @@ public class Leave {
         this.id = id;
     }
 
-    public User getUser() {
+    public MyUser getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(MyUser user) {
         this.user = user;
     }
 

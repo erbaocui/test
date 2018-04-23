@@ -1,6 +1,7 @@
 package com.Final.controller;
 
 import com.Final.model.Leave;
+import com.Final.model.MyUser;
 import com.Final.model.PageBean;
 import com.Final.service.LeaveService;
 import com.Final.service.UserService;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -99,7 +101,7 @@ public class LeaveController {
      * @throws Exception
      */
     @RequestMapping("/startApply")
-    public String startApply(Integer leaveId, HttpServletResponse response) throws Exception {
+    public String startApply(Integer leaveId, HttpServletResponse response,HttpSession session) throws Exception {
         Map<String,Object> variables = new HashMap<String, Object>();
         variables.put("leaveId",leaveId);
         ProcessInstance pi =runtimeService.startProcessInstanceByKey("studentLeaveProcess",variables);// 启动流程
@@ -109,6 +111,7 @@ public class LeaveController {
         Leave leave = leaveService.findById( leaveId);
         leave.setState("审核中");
         leave.setProcessInstanceId(pi.getProcessInstanceId());
+        leave.setUser((MyUser) session.getAttribute("currentUser"));
         leaveService.update(leave);// 修改请假单状态
         JSONObject result=new JSONObject();
         result.put("success", true);

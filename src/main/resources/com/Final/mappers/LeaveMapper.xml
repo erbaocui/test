@@ -10,7 +10,7 @@
         <result property="leaveReason" column="leaveReason"/>
         <result property="state" column="state"/>
         <result property="processInstanceId" column="processInstanceId"/>
-        <association property="user" column="userId" select="com.Final.dao.UserDao.findById"/>
+        <association property="user" column="userId" select="com.Final.dao.MyUserDao.findByLoginName"/>
     </resultMap>
 
     <select id="findById" parameterType="Integer" resultMap="LeaveResult">
@@ -18,7 +18,7 @@
     </select>
 
     <insert id="add" parameterType="Leave" >
-        insert into t_leave values(null,#{user.id},#{leaveDate},#{leaveDays},#{leaveReason},#{state},#{processInstanceId});
+        insert into t_leave values(null,#{user.longName},#{leaveDate},#{leaveDays},#{leaveReason},#{state},#{processInstanceId});
     </insert>
 
     <update id="update" parameterType="Leave">
@@ -29,6 +29,9 @@
             </if>
             <if test="processInstanceId!=null and processInstanceId!=''">
                 processInstanceId=#{processInstanceId},
+            </if>
+            <if test="user.loginName!=null and user.loginName!=''">
+                userId=#{loginName},
             </if>
         </set>
         WHERE  id=#{id}

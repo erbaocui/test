@@ -69,6 +69,7 @@ public class MyUserController {
             }
             ResponseUtil.write(response, result);
         }catch (Exception e){
+           e.printStackTrace();
             logger.error("登录失败"+e.getMessage());
         }
 

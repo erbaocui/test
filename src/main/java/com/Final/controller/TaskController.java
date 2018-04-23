@@ -16,6 +16,7 @@ import org.activiti.engine.impl.pvm.process.ActivityImpl;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Comment;
+import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +69,7 @@ public class TaskController {
      * @throws Exception
      */
     @RequestMapping("/list")
-    public String list(@RequestParam(value = "page", required = false) String page, @RequestParam(value = "rows", required = false) String rows, String s_taskName, String userId, HttpServletResponse response) throws Exception {
+    public String list(@RequestParam(value = "page", required = false) String page, @RequestParam(value = "rows", required = false) String rows, String s_taskName, String userId, HttpServletResponse response, HttpSession session) throws Exception {
         if (s_taskName == null) {
             s_taskName = "";
         }
@@ -88,16 +89,29 @@ public class TaskController {
             //根据用户Id查询
             //根据任务名称模糊查询
             //分页
-            List<Task> taskList = taskService.createTaskQuery().
-                    taskCandidateUser(userId).
-                    taskNameLike("%" + s_taskName + "%").
+
+            MyUser currentUser = (MyUser) session.getAttribute("currentUser");
+            List<String> roleKeyList=new ArrayList<String>();
+            for(MyRole myRole:currentUser.getRoles()){
+                roleKeyList.add(myRole.getId());
+            }
+            List<Task> taskList = taskService.createTaskQuery()
+                   // taskCandidateUser(userId).
+                   .taskCandidateGroupIn(roleKeyList)
+                    //.taskCandidateGroup("bz")
+
+                    .taskNameLike("%" + s_taskName + "%").
                     listPage(pageBean.getStart(), pageBean.getPageSize());
             List<MyTask> tasks = new ArrayList<MyTask>(30);
             for (Task task : taskList) {
+                List<IdentityLink> list= taskService. getIdentityLinksForTask(task.getId());
                 MyTask t = new MyTask();
                 t.setId(task.getId());
                 t.setName(task.getName());
                 t.setCreateTime(task.getCreateTime());
+                if(null!=list&&list.size()>0){
+                    t.setGroup( list.get(0).getGroupId());
+                }
                 tasks.add(t);
             }
             long total = taskService.createTaskQuery().taskCandidateUser(userId).taskNameLike("%" + s_taskName + "%").count();
@@ -128,7 +142,7 @@ public class TaskController {
      * @throws Exception
      */
     @RequestMapping("/finishedList")
-    public String finishedList(@RequestParam(value = "page", required = false) String page, @RequestParam(value = "rows", required = false) String rows, String s_taskName, String groupId, HttpServletResponse response) throws Exception {
+    public String finishedList(@RequestParam(value = "page", required = false) String page, @RequestParam(value = "rows", required = false) String rows, String s_taskName, String groupId, HttpServletResponse response, HttpSession session) throws Exception {
         if (s_taskName == null) {
             s_taskName = "";
         }
@@ -150,12 +164,18 @@ public class TaskController {
             // 根据角色查询
             // 根据任务名称模糊查询
             // 返回带分页的结果集合
-            List<HistoricTaskInstance> historicTaskInstances = historyService.createHistoricTaskInstanceQuery().
-                    taskCandidateGroup(groupId).
+            MyUser currentUser = (MyUser) session.getAttribute("currentUser");
+                    List<String> roleKeyList=new ArrayList<String>();
+            for(MyRole myRole:currentUser.getRoles()){
+                roleKeyList.add(myRole.getId());
+            }
+            List<HistoricTaskInstance> historicTaskInstances = historyService.createHistoricTaskInstanceQuery().taskCandidateGroupIn(roleKeyList).
+                    //taskCandidateGroup(groupId).
                     taskNameLike("%" + s_taskName + "%").
                     listPage(pageBean.getStart(), pageBean.getPageSize());
             List<MyTask> myTasks = new ArrayList<MyTask>(30);
             int t = 0;
+
             for (HistoricTaskInstance hit : historicTaskInstances) {
                 if (taskService.createTaskQuery().processInstanceId(hit.getProcessInstanceId()).singleResult() == null) {
                     MyTask myTask = new MyTask();
@@ -198,7 +218,7 @@ public class TaskController {
      * @throws Exception
      */
     @RequestMapping("/unFinishedList")
-    public String unFinishedList(@RequestParam(value = "page", required = false) String page, @RequestParam(value = "rows", required = false) String rows, String s_taskName, String groupId, String userId, HttpServletResponse response) throws Exception {
+    public String unFinishedList(@RequestParam(value = "page", required = false) String page, @RequestParam(value = "rows", required = false) String rows, String s_taskName, String groupId, String userId, HttpServletResponse response, HttpSession session) throws Exception {
         if (s_taskName == null) {
             s_taskName = "";
         }
@@ -220,8 +240,13 @@ public class TaskController {
             // 根据角色查询
             // 根据任务名称模糊查询
             // 返回带分页的结果集合
-            List<HistoricTaskInstance> historicTaskInstances = historyService.createHistoricTaskInstanceQuery().
-                    taskCandidateGroup(groupId).
+            MyUser currentUser = (MyUser) session.getAttribute("currentUser");
+            List<String> roleKeyList=new ArrayList<String>();
+            for(MyRole myRole:currentUser.getRoles()){
+                roleKeyList.add(myRole.getId());
+            }
+            List<HistoricTaskInstance> historicTaskInstances = historyService.createHistoricTaskInstanceQuery().taskCandidateGroupIn(roleKeyList).
+                    //taskCandidateGroup(groupId).
                     taskNameLike("%" + s_taskName + "%").
                     listPage(pageBean.getStart(), pageBean.getPageSize());
             List<MyTask> myTasks = new ArrayList<MyTask>(30);
@@ -342,6 +367,43 @@ public class TaskController {
         return null;
     }
 
+    @RequestMapping("/bcyy")
+    public String bcyy(String taskId, Integer leaveDays,String leaveReason, String comment, Integer state, String group,HttpServletResponse response, HttpSession session) throws Exception {
+
+        // 通过任务id查询流程定义
+        Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
+        Map<String, Object> variables = new HashMap<String, Object>();
+        if (state == 1) {
+            Integer leaveId = (Integer) taskService.getVariable(taskId, "leaveId");
+            Leave leave = leaveService.findById(leaveId);
+            variables.put("msg", "补充完毕");
+            leave.setLeaveReason(leaveReason);
+            leave.setLeaveDays(leaveDays);
+            leaveService.update(leave);
+        }/* else if (state == 2) {
+            Integer leaveId = (Integer) taskService.getVariable(taskId, "leaveId");
+            Leave leave = leaveService.findById(leaveId);
+            leave.setState("审核未通过");
+            leaveService.update(leave);
+            variables.put("msg", "未通过");
+        }*/
+
+        variables.put("days", leaveDays);   //设置请假时间
+        // 获取流程实例id
+        String processInstacnId = task.getProcessInstanceId();
+        MyUser currentUser = (MyUser) session.getAttribute("currentUser");
+
+        // Group currentGroup = currentMemberShip.getGroup();
+        Authentication.setAuthenticatedUserId( currentUser.getName()+ "【" +group + "】");// 设置用户id
+        taskService.addComment(taskId, processInstacnId, comment);
+
+        taskService.complete(taskId,variables);     //记得把流程变量也带上 要不然绝对报错
+        JSONObject result = new JSONObject();
+        result.put("success", true);
+        ResponseUtil.write(response, result);
+        return null;
+    }
+
     /**
      * 班长审批
      *
@@ -355,7 +417,7 @@ public class TaskController {
      * @throws Exception
      */
     @RequestMapping("/audit_bz")
-    public String audit_bz(String taskId, Integer leaveDays, String comment, Integer state, HttpServletResponse response, HttpSession session) throws Exception {
+    public String audit_bz(String taskId, Integer leaveDays, String comment, Integer state,String group, HttpServletResponse response, HttpSession session) throws Exception {
 
         // 通过任务id查询流程定义
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
@@ -373,10 +435,10 @@ public class TaskController {
         variables.put("days", leaveDays);   //设置请假时间
         // 获取流程实例id
         String processInstacnId = task.getProcessInstanceId();
-        MemberShip currentMemberShip = (MemberShip) session.getAttribute("currentMemberShip");
-        User currentUser = currentMemberShip.getUser();
-        Group currentGroup = currentMemberShip.getGroup();
-        Authentication.setAuthenticatedUserId(currentUser.getFirstName() + currentUser.getLastName() + "【" + currentGroup.getName() + "】");// 设置用户id
+        MyUser currentUser = (MyUser) session.getAttribute("currentUser");
+
+       // Group currentGroup = currentMemberShip.getGroup();
+        Authentication.setAuthenticatedUserId( currentUser.getName()+ "【" +group + "】");// 设置用户id
         taskService.addComment(taskId, processInstacnId, comment);
 
         taskService.complete(taskId,variables);     //记得把流程变量也带上 要不然绝对报错
@@ -400,7 +462,7 @@ public class TaskController {
      * @throws Exception
      */
     @RequestMapping("/audit_ld")
-    public String audit_ld(String taskId, Integer leaveDays, String comment, Integer state, HttpServletResponse response, HttpSession session) throws Exception {
+    public String audit_ld(String taskId, Integer leaveDays, String comment, Integer state,String group, HttpServletResponse response, HttpSession session) throws Exception {
         // 通过任务id查询流程定义
         Task task=taskService.createTaskQuery() // 创建任务查询
                 .taskId(taskId) // 根据任务id查询
@@ -416,10 +478,9 @@ public class TaskController {
             leaveService.update(leave); // 更新审核信息
         }
         String processInstanceId = task.getProcessInstanceId(); // 获取流程实例id
-        MemberShip currentMemberShip=(MemberShip)session.getAttribute("currentMemberShip");
-        User currentUser=currentMemberShip.getUser();
-        Group currentGroup=currentMemberShip.getGroup();
-        Authentication.setAuthenticatedUserId(currentUser.getFirstName()+currentUser.getLastName()+"【"+currentGroup.getName()+"】");// 设置用户id
+        MyUser currentUser = (MyUser) session.getAttribute("currentUser");
+
+        Authentication.setAuthenticatedUserId( currentUser.getName()+ "【" +group + "】");// 设置用户id
         taskService.addComment(taskId, processInstanceId, comment); // 添加批注信息
         taskService.complete(taskId, variables); // 完成任务
         JSONObject result=new JSONObject();
@@ -456,7 +517,7 @@ public class TaskController {
 
     /**
      * 历史批注 通过流程实例id
-     * @param taskId
+     * @param
      * @param response
      * @return
      * @throws Exception

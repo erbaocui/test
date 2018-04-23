@@ -21,12 +21,12 @@
 	
 	
 	function formatAction(val,row){
-		return "<a  href='javascript:openFinishTaskTab('"+row.id+"')' >办理任务</a>&nbsp;&nbsp;"+"<a target='_blank' href='${pageContext.request.contextPath}/task/showCurrentView.do?taskId="+row.id+"' >查看当前流程图</a>";
+		return "<a  href='javascript:openFinishTaskTab(\""+row.id+"\",\""+row.group+"\")' >办理任务</a>&nbsp;&nbsp;"+"<a target='_blank' href='${pageContext.request.contextPath}/task/showCurrentView.do?taskId="+row.id+"' >查看当前流程图</a>";
 	}
 	
-	function openFinishTaskTab(taskId){
+	function openFinishTaskTab(taskId,group){
 		$.post("${pageContext.request.contextPath}/task/redirectPage.do",{taskId:taskId},function(result){
-			window.parent.openTab('办理任务',result.url+'?taskId='+taskId,'icon-check');
+			window.parent.openTab('办理任务',result.url+'?taskId='+taskId+'&group='+group,'icon-check');
 		},"json");
 	}
 	
@@ -35,7 +35,7 @@
 <body style="margin: 1px">
 <table id="dg" title="待办任务管理" class="easyui-datagrid"
    fitColumns="true" pagination="true" rownumbers="true"
-   url="${pageContext.request.contextPath}/task/list.do?userId='${currentUser.id}" fit="true" toolbar="#tb">
+   url="${pageContext.request.contextPath}/task/list.do?userId='${currentUser.loginName}" fit="true" toolbar="#tb">
    <thead>
    	<tr>
    		<th field="cb" checkbox="true" align="center"></th>

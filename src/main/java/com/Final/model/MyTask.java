@@ -12,6 +12,8 @@ public class MyTask {
     private Date createTime; // 创建时间
     private Date endTime; // 结束时间
 
+    private String group;
+
     public MyTask(String id, String name, Date createTime, Date endTime) {
         this.id = id;
         this.name = name;
@@ -54,5 +56,11 @@ public class MyTask {
         this.endTime = endTime;
     }
 
+    public String getGroup() {
+        return group;
+    }
 
+    public void setGroup(String group) {
+        this.group = group;
+    }
 }

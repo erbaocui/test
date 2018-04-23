@@ -14,6 +14,7 @@ import org.activiti.engine.impl.UserQueryImpl;
 import org.activiti.engine.impl.persistence.entity.IdentityInfoEntity;
 import org.activiti.engine.impl.persistence.entity.UserEntity;
 import org.activiti.engine.impl.persistence.entity.UserEntityManager;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 /**
  * Created by USER on 2018/4/19.
  */
+
 @Service
 public class CustomUserEntityManager extends UserEntityManager {
 
@@ -42,6 +44,7 @@ public class CustomUserEntityManager extends UserEntityManager {
             MyUser myUser = myUserService.findById(userId);
             userEntity.setId(myUser.getLoginName());
             userEntity.setFirstName(myUser.getName());
+            userEntity.setLastName(StringUtils.EMPTY);
 
             userEntity.setPassword(myUser.getPassword());
         } catch (Exception e) {
